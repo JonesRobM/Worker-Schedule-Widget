@@ -164,4 +164,30 @@ class SchedulerApp(tk.Tk):
 
         # 3. Get selected day
         selected_day = self.day_var.get()
-        if selected_day not in DAYS_
+        if selected_day not in DAYS_OF_WEEK:
+            messagebox.showwarning("Missing Selection", "Please select a valid day.")
+            return
+
+        # 4. Check for exact‐duplicate assignment
+        if self.manager.has_duplicate(selected_day, selected_shift, selected_worker):
+            messagebox.showinfo(
+                "Already Assigned",
+                f"{selected_worker} already has {selected_shift} on {selected_day}."
+            )
+            return
+
+        # 5. Optional: Prevent one worker having two shifts the same day
+        # if self.manager.worker_has_shift_on_day(selected_worker, selected_day):
+        #     messagebox.showinfo(
+        #         "Conflict",
+        #         f"{selected_worker} already has a shift on {selected_day}."
+        #     )
+        #     return
+
+        # 6. Add to manager and update the table
+        success = self.manager.add_assignment(selected_day, selected_shift, selected_worker)
+        if success:
+            self.tree.insert("", tk.END, values=(selected_day, selected_shift, selected_worker))
+        else:
+            # This should not normally happen (we already checked has_duplicate), but just in case
+            messagebox.showerror("Error", "Failed to add assignment (internal error).")
